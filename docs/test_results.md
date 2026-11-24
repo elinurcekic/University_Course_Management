@@ -2,7 +2,7 @@
 
 ## Automated verification
 
-<badge>PASS</badge> **GitHub Actions run #13 completed successfully** for the latest `main` commit reviewed in this submission-preparation pass.
+**PASS — GitHub Actions run #13 completed successfully** for the latest `main` commit reviewed in this submission-preparation pass.
 
 - Workflow: UCMS tests
 - Run: https://github.com/elinurcekic/University_Course_Management/actions/runs/45463692601
