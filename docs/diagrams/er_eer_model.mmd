@@ -1,0 +1,15 @@
+erDiagram
+    DEPARTMENT ||--o{ STUDENT : has
+    DEPARTMENT ||--o{ INSTRUCTOR : employs
+    DEPARTMENT ||--o{ COURSE : owns
+    PERSON ||--o| STUDENT : subtype
+    PERSON ||--o| INSTRUCTOR : subtype
+    COURSE ||--o{ SECTION : offered_as
+    ACADEMIC_TERM ||--o{ SECTION : contains
+    INSTRUCTOR o|--o{ SECTION : teaches
+    CLASSROOM o|--o{ SECTION : hosts
+    SECTION ||--o{ COURSE_SCHEDULE : has
+    STUDENT ||--o{ ENROLLMENT : registers
+    SECTION ||--o{ ENROLLMENT : receives
+    ENROLLMENT ||--o{ GRADE : assessed_by
+    COURSE ||--o{ COURSE_PREREQUISITE : prerequisite_link
