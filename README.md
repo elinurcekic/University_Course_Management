@@ -12,6 +12,7 @@ A university course-management database project built with Python, Flask, SQLite
 - Flask pages for dashboard, students, courses, sections, enrollments and grades
 - ER/EER modeling, relational mapping and 1NF–3NF documentation
 - SQL examples with joins, aggregation, subqueries, CTEs and DML
+- Test plan, database validator, Flask route tests and GitHub Actions workflow
 
 ## Local setup
 ```bash
@@ -28,7 +29,7 @@ Open http://127.0.0.1:5000.
 python scripts/validate_database.py
 python -m pytest -q
 ```
-The standard-library database validation passes in the prepared project package. The Flask route suite must be run in an environment with the dependencies installed; see `docs/test_results.md`.
+The commands above are the required checks. Record their actual outputs in `docs/test_results.md`; do not infer test success from the presence of the test scripts. GitHub Actions runs the database validator and Flask route suite on pushes and pull requests to `main`.
 
 ## Main project artifacts
 - `app.py` — Flask application
@@ -37,8 +38,11 @@ The standard-library database validation passes in the prepared project package.
 - `database/queries.sql` and `database/advanced_queries.sql` — SQL examples
 - `docs/technical_report.md` — technical report
 - `docs/normalization.md` — normalization analysis
-- `docs/er_eer_diagram.md` and `docs/diagrams/` — conceptual diagrams
+- `docs/er_eer_diagram.md` and `docs/diagrams/er_eer_model.mmd` — conceptual diagram and Mermaid source
 - `docs/requirements_traceability.md` — mapping to course requirements
+- `docs/test_plan.md` and `docs/test_results.md` — testing documentation
+- `docs/presentation.md` — slide-ready presentation outline
+- `docs/submission_checklist.md` — final hand-in checklist
 - `scripts/validate_database.py` — database validation
 - `tests/` — Flask route tests
 
