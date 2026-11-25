@@ -1,18 +1,24 @@
-"""Validate the expanded fictional dataset and execute the extended SQL query library."""
+"""Validate expanded UCMS records and execute every extended query."""
 from pathlib import Path
 import sqlite3
 import tempfile
-ROOT = Path(__file__).resolve().parents[1]
+ROOT=Path(__file__).resolve().parents[1]
 
 def main():
     with tempfile.TemporaryDirectory() as temp:
-        with sqlite3.connect(Path(temp) / "ucms.db") as conn:
+        with sqlite3.connect(Path(temp)/"ucms.db") as conn:
             conn.execute("PRAGMA foreign_keys=ON")
-            for path in ("database/schema.sql","database/sample_data.sql","database/expanded_sample_data.sql"):
-                try:
-                    conn.executescript((ROOT / path).read_text(encoding="utf-8"))
+            conn.executescript((ROOT/"database/schema.sql").read_text(encoding="utf-8"))
+            conn.executescript((ROOT/"database/sample_data.sql").read_text(encoding="utf-8"))
+            expanded=(ROOT/"database/expanded_sample_data.sql").read_text(encoding="utf-8")
+            for index,raw in enumerate(expanded.split(";"),start=1):
+                statement="\n".join(line for line in raw.splitlines() if not line.strip().startswith("--")).strip()
+                if not statement: continue
+                try: conn.execute(statement)
                 except sqlite3.Error as exc:
-                    raise AssertionError(f"Failed while loading {path}: {exc}") from exc
+                    print(f"Expanded seed statement {index} failed:\n{statement}")
+                    raise AssertionError(f"Expanded seed statement {index}: {exc}") from exc
+            conn.commit()
             expected={"department":3,"person":43,"student":35,"instructor":8,"course":23,"classroom":9,"section":23,"enrollment":95,"grade":94}
             for table,count in expected.items():
                 actual=conn.execute(f"SELECT COUNT(*) FROM {table}").fetchone()[0]
@@ -30,6 +36,6 @@ def main():
             for i,stmt in enumerate(statements,1):
                 try: conn.execute(stmt).fetchall()
                 except sqlite3.Error as exc: raise AssertionError(f"Extended query {i} failed: {exc}\n{stmt}") from exc
-    print("Expanded dataset validation: PASS (35 students, 23 courses, 95 enrollments)")
+    print("Expanded dataset validation: PASS")
     print("Extended query validation: PASS (25 queries executed)")
 if __name__=="__main__": main()
