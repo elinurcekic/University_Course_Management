@@ -50,3 +50,12 @@ The commands above are the required checks. Record their actual outputs in `docs
 This is an educational prototype, not a production student information system. It does not include authentication, role-based authorization or CSRF protection. Prerequisite relationships are modeled but prerequisite eligibility is not yet enforced in the registration route. Do not publish real student data or secrets.
 
 See `docs/advanced_database_concepts.md` for the distinction between implemented features and future extensions.
+
+
+## Expanded demonstration dataset and reporting queries
+
+- `database/expanded_sample_data.sql` adds 30 fictional students, 18 courses, 6 instructors, 18 sections, 90 enrollments and 90 grade records.
+- `database/query_examples_extra.sql` provides 25 additional roster, enrollment, grade, schedule and department reports.
+- `database/EXPANDED_DATA_GUIDE.md` explains load order and query usage.
+
+Load the expanded dataset only after the original schema and sample data have been loaded. See the guide for the exact command.
