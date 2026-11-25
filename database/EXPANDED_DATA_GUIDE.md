@@ -1,29 +1,36 @@
 # Expanded UCMS dataset and query library
 
-## Dataset size after loading both seed files
+## Data included
 
-The original seed file is retained. The optional expanded seed file adds:
-- 30 fictional students (35 total including the original five)
+The expanded seed file adds the following fictional demonstration records to the original seed data:
+
+- 30 additional students (35 total)
 - 18 additional courses (23 total)
 - 6 additional instructors (8 total)
 - 18 additional sections (23 total)
 - 90 additional registrations (95 total)
-- 90 additional grade records (94 total)
+- 90 additional assessment records (94 total)
 
-All added records use fictional names and example.edu email addresses.
+All generated names and email addresses are fictional; the email domain is example.edu.
 
-## Load order
+## Load the expanded database
 
-From the project root, initialize the schema and original seed data first, then run:
+From the project root run:
+
+```bash
+python scripts/reset_database.py
+```
+
+The reset script recreates the local database and loads, in order, the schema, original sample data and expanded sample data. **This deletes the existing local demo database**, so export any local changes you need before running it.
+
+If you only want to add the expanded records to a database that already contains the original schema and sample data, run:
 
 ```bash
 python -c "import sqlite3; c=sqlite3.connect('database/university.db'); c.execute('PRAGMA foreign_keys=ON'); c.executescript(open('database/expanded_sample_data.sql').read()); c.commit(); c.close()"
 ```
 
-Or execute the script in SQLite after the original schema and sample data have been loaded. The file uses INSERT OR IGNORE so it can be safely re-run against the same database.
+## Extended SQL queries
 
-## Query examples
+Open `database/query_examples_extra.sql`. It contains 25 examples: exact-course rosters, Mathematics department rosters, popular courses, student course loads, grade averages, instructor assignments, schedules, prerequisite maps, seat availability and department comparisons.
 
-Open `database/query_examples_extra.sql`. It contains 25 additional queries, including exact-course rosters, Mathematics department rosters, popularity rankings, student course loads, grade averages, instructor assignments, schedule reports, prerequisites and seat availability.
-
-Example: change `MATH201` in query 1 to `CS202`, `BUS201` or another course code to see its enrolled students.
+Example: change `MATH201` in query 1 to `CS202` or `BUS201` to inspect another course's enrolled students.
