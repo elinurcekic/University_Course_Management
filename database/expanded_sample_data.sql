@@ -329,4 +329,6 @@ INSERT OR IGNORE INTO grade(grade_id,enrollment_id,assessment_name,score,max_sco
 
 -- Additional course prerequisite relationships for demonstration.
 INSERT OR IGNORE INTO course_prerequisite(course_id,prerequisite_course_id,minimum_grade) VALUES
-(7,1,'C'),(8,1,'C'),(9,1,'C'),(10,2,'C'),(11,2,'C'),(12,3,'C'),(13,3,'C'),(14,4,'C'),(15,4,'C'),(16,4,'C'),(17,14,'C'),(18,15,'C'),(19,16,'C'),(20,16,'C'),(21,17,'C'),(22,18,'C'),(23,19,'C');
+(6,2,'C'),(7,1,'C'),(8,1,'C'),(9,2,'C'),(10,3,'C'),(11,6,'C'),(12,1,'C'),
+(13,4,'C'),(14,4,'C'),(15,4,'C'),(16,4,'C'),(17,16,'C'),(18,13,'C'),
+(20,5,'C'),(21,5,'C'),(22,5,'C'),(23,19,'C');
