@@ -332,3 +332,12 @@ INSERT OR IGNORE INTO course_prerequisite(course_id,prerequisite_course_id,minim
 (6,2,'C'),(7,1,'C'),(8,1,'C'),(9,2,'C'),(10,3,'C'),(11,6,'C'),(12,1,'C'),
 (13,4,'C'),(14,4,'C'),(15,4,'C'),(16,4,'C'),(17,16,'C'),(18,13,'C'),
 (20,5,'C'),(21,5,'C'),(22,5,'C'),(23,19,'C');
+
+-- Add a separate Final assessment for each expanded-demo Midterm record.
+-- Final scores are deterministic fictional sample values (not real student results).
+INSERT OR IGNORE INTO grade(enrollment_id, assessment_name, score, max_score)
+SELECT enrollment_id, 'Final',
+       MIN(max_score, MAX(0, score + ((enrollment_id * 7) % 21) - 10)),
+       max_score
+FROM grade
+WHERE assessment_name='Midterm' AND enrollment_id BETWEEN 6 AND 95;

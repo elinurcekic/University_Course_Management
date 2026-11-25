@@ -9,7 +9,7 @@ A university course-management database project built with Python, Flask, SQLite
 - Student enrollments, schedules and assessment grades
 - Relational schema with primary/foreign keys, UNIQUE and CHECK constraints
 - SQL views, indexes and triggers for capacity, timetable and grade-status rules
-- Flask pages for dashboard, students, courses, sections, enrollments and grades
+- Flask pages for dashboard, student registration, courses, sections, enrollments and separate Midterm/Final grade reporting
 - ER/EER modeling, relational mapping and 1NF–3NF documentation
 - SQL examples with joins, aggregation, subqueries, CTEs and DML
 - Test plan, database validator, Flask route tests and GitHub Actions workflow
@@ -59,3 +59,8 @@ See `docs/advanced_database_concepts.md` for the distinction between implemented
 - `database/EXPANDED_DATA_GUIDE.md` explains load order and query usage.
 
 Load the expanded dataset only after the original schema and sample data have been loaded. See the guide for the exact command.
+
+
+## Student registration and separate exams
+
+The Students page now includes a transactional student registration form. The Grades page records Midterm and Final independently and displays a weighted total (40% Midterm + 60% Final) once both are available. See `database/STUDENT_AND_EXAM_GUIDE.md`.

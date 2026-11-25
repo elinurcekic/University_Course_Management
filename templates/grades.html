@@ -1,1 +1,18 @@
-{% extends "base.html" %}{% block content %}<h2>Grades</h2><form method="post"><label>Enrollment<select name="enrollment_id" required>{% for e in eligible %}<option value="{{ e.enrollment_id }}">{{ e.student_number }} — {{ e.student_name }} · {{ e.course_code }} / {{ e.section_number }}</option>{% endfor %}</select></label><label>Assessment<input name="assessment_name" required></label><label>Score<input type="number" name="score" min="0" step="0.01" required></label><label>Maximum score<input type="number" name="max_score" min="0.01" step="0.01" value="100" required></label><button type="submit">Save grade</button></form><table><tr><th>Student</th><th>Course</th><th>Assessment</th><th>Score</th><th>Maximum</th></tr>{% for g in grades %}<tr><td>{{ g.student_number }} — {{ g.student_name }}</td><td>{{ g.course_code }}</td><td>{{ g.assessment_name }}</td><td>{{ g.score }}</td><td>{{ g.max_score }}</td></tr>{% endfor %}</table>{% endblock %}
+{% extends "base.html" %}{% block content %}
+<h2>Exam Grades</h2>
+<p>Midterm and Final are stored as separate assessment records. You can enter either score now and update the other later.</p>
+<section class="panel"><h3>Enter / update exam scores</h3>
+<form method="post" class="form-grid">
+<label class="wide">Student and course<select name="enrollment_id" required><option value="">Choose an enrollment</option>{% for e in eligible %}<option value="{{ e.enrollment_id }}">{{ e.student_number }} — {{ e.student_name }} · {{ e.course_code }} / {{ e.section_number }}</option>{% endfor %}</select></label>
+<label>Midterm score (0–100)<input type="number" name="midterm" min="0" max="100" step="0.01" placeholder="e.g. 78"></label>
+<label>Final score (0–100)<input type="number" name="final" min="0" max="100" step="0.01" placeholder="e.g. 86"></label>
+<div class="wide"><button type="submit">Save exam scores</button></div>
+</form></section>
+<h3>Student exam report</h3>
+<p>Weighted total = Midterm {{ midterm_weight }}% + Final {{ final_weight }}%. The total appears only when both scores are entered.</p>
+<table><tr><th>Student</th><th>Course</th><th>Midterm</th><th>Final</th><th>Weighted total</th></tr>
+{% for g in grades %}<tr><td>{{ g.student_number }} — {{ g.student_name }}</td><td>{{ g.course_code }} / {{ g.section_number }}</td>
+<td>{{ '%.2f'|format(g.midterm) if g.midterm is not none else '—' }}</td><td>{{ '%.2f'|format(g.final) if g.final is not none else '—' }}</td>
+<td>{% if g.midterm is not none and g.final is not none %}{{ '%.2f'|format(g.midterm * midterm_weight / 100 + g.final * final_weight / 100) }}{% else %}Pending{% endif %}</td></tr>
+{% else %}<tr><td colspan="5">No enrollments available.</td></tr>{% endfor %}</table>
+{% endblock %}

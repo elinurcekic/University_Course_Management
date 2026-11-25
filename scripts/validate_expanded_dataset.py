@@ -19,7 +19,7 @@ def main():
                     print(f"Expanded seed statement {index} failed:\n{statement}")
                     raise AssertionError(f"Expanded seed statement {index}: {exc}") from exc
             conn.commit()
-            expected={"department":3,"person":43,"student":35,"instructor":8,"course":23,"classroom":9,"section":23,"enrollment":95,"grade":94}
+            expected={"department":3,"person":43,"student":35,"instructor":8,"course":23,"classroom":9,"section":23,"enrollment":95,"grade":184}
             for table,count in expected.items():
                 actual=conn.execute(f"SELECT COUNT(*) FROM {table}").fetchone()[0]
                 assert actual==count, f"{table}: expected {count}, got {actual}"
@@ -27,6 +27,9 @@ def main():
             assert not conn.execute("PRAGMA foreign_key_check").fetchall()
             roster=conn.execute("SELECT COUNT(*) FROM course c JOIN section s ON s.course_id=c.course_id JOIN enrollment e ON e.section_id=s.section_id AND e.status='ENROLLED' WHERE c.course_code='MATH201'").fetchone()[0]
             assert roster==5, f"MATH201 roster expected 5, got {roster}"
+            for assessment in ("Midterm", "Final"):
+                count=conn.execute("SELECT COUNT(*) FROM grade WHERE assessment_name=? AND enrollment_id BETWEEN 6 AND 95", (assessment,)).fetchone()[0]
+                assert count==90, f"{assessment} records expected 90, got {count}"
             raw=(ROOT/"database/query_examples_extra.sql").read_text(encoding="utf-8")
             statements=[]
             for part in raw.split(";"):
