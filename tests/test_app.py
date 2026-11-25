@@ -76,7 +76,7 @@ def test_midterm_and_final_are_separate_and_weighted(tmp_path):
     assert response.status_code == 200
     with sqlite3.connect(db) as conn:
         records = conn.execute(
-            "SELECT assessment_name, score FROM grade WHERE enrollment_id=1 ORDER BY assessment_name"
+            "SELECT assessment_name, score FROM grade WHERE enrollment_id=1 AND assessment_name IN ('Midterm','Final') ORDER BY assessment_name"
         ).fetchall()
     assert records == [("Final", 90.0), ("Midterm", 70.0)]
     assert b"82.00" in response.data

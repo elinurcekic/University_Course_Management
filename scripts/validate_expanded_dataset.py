@@ -28,7 +28,7 @@ def main():
             roster=conn.execute("SELECT COUNT(*) FROM course c JOIN section s ON s.course_id=c.course_id JOIN enrollment e ON e.section_id=s.section_id AND e.status='ENROLLED' WHERE c.course_code='MATH201'").fetchone()[0]
             assert roster==5, f"MATH201 roster expected 5, got {roster}"
             for assessment in ("Midterm", "Final"):
-                count=conn.execute("SELECT COUNT(*) FROM grade WHERE assessment_name=? AND enrollment_id BETWEEN 6 AND 95", (assessment,)).fetchone()[0]
+                count=conn.execute("SELECT COUNT(*) FROM grade WHERE assessment_name=?", (assessment,)).fetchone()[0]
                 assert count==90, f"{assessment} records expected 90, got {count}"
             raw=(ROOT/"database/query_examples_extra.sql").read_text(encoding="utf-8")
             statements=[]
