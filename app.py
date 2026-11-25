@@ -9,7 +9,11 @@ DB_PATH = BASE_DIR / "database" / "university.db"
 
 def create_app(test_config=None):
     app = Flask(__name__)
-    app.config.update(SECRET_KEY=os.environ.get("UCMS_SECRET_KEY", "local-development-key-change-before-deployment"))
+    app.config.update(
+        SECRET_KEY=os.environ.get("UCMS_SECRET_KEY", "local-development-key-change-before-deployment"),
+        MIDTERM_WEIGHT=40,
+        FINAL_WEIGHT=60,
+    )
     if test_config:
         app.config.update(test_config)
 
@@ -31,8 +35,7 @@ def create_app(test_config=None):
             recent = conn.execute("""
                 SELECT e.enrollment_id, p.first_name || ' ' || p.last_name AS student_name,
                        c.course_code, c.title, s.section_number, e.enrollment_date
-                FROM enrollment e
-                JOIN student st ON st.student_id=e.student_id
+                FROM enrollment e JOIN student st ON st.student_id=e.student_id
                 JOIN person p ON p.person_id=st.person_id
                 JOIN section s ON s.section_id=e.section_id
                 JOIN course c ON c.course_id=s.course_id
@@ -40,10 +43,38 @@ def create_app(test_config=None):
             """).fetchall()
         return render_template("index.html", stats=stats, recent=recent)
 
-    @app.route("/students")
+    @app.route("/students", methods=["GET", "POST"])
     def students():
         q = request.args.get("q", "").strip()
         with db() as conn:
+            if request.method == "POST":
+                try:
+                    first_name = request.form.get("first_name", "").strip()
+                    last_name = request.form.get("last_name", "").strip()
+                    email = request.form.get("email", "").strip()
+                    student_number = request.form.get("student_number", "").strip()
+                    program = request.form.get("program", "").strip()
+                    department_id = int(request.form.get("department_id", ""))
+                    level = int(request.form.get("level", ""))
+                    admission_date = request.form.get("admission_date", "").strip()
+                    if not all([first_name, last_name, email, student_number, program, admission_date]):
+                        raise ValueError("Please complete all required student fields.")
+                    if not 1 <= level <= 8:
+                        raise ValueError("Level must be between 1 and 8.")
+                    cur = conn.execute(
+                        "INSERT INTO person(first_name,last_name,email) VALUES (?,?,?)",
+                        (first_name, last_name, email),
+                    )
+                    conn.execute("""
+                        INSERT INTO student(person_id,student_number,department_id,program,level,admission_date)
+                        VALUES (?,?,?,?,?,?)
+                    """, (cur.lastrowid, student_number, department_id, program, level, admission_date))
+                    conn.commit()
+                    flash(f"Student {student_number} was added successfully.", "success")
+                except (sqlite3.IntegrityError, ValueError) as exc:
+                    conn.rollback()
+                    flash(f"Student could not be added: {exc}", "error")
+                return redirect(url_for("students"))
             rows = conn.execute("""
                 SELECT st.student_id, st.student_number, st.program, st.level, st.status,
                        p.first_name, p.last_name, p.email, d.department_name
@@ -53,7 +84,10 @@ def create_app(test_config=None):
                        OR p.last_name LIKE ? OR p.email LIKE ?)
                 ORDER BY p.last_name, p.first_name
             """, (q, f"%{q}%", f"%{q}%", f"%{q}%", f"%{q}%")).fetchall()
-        return render_template("students.html", students=rows, q=q)
+            departments = conn.execute(
+                "SELECT department_id, department_name FROM department ORDER BY department_name"
+            ).fetchall()
+        return render_template("students.html", students=rows, q=q, departments=departments)
 
     @app.route("/courses")
     def courses():
@@ -126,20 +160,32 @@ def create_app(test_config=None):
     def grades():
         with db() as conn:
             if request.method == "POST":
+                enrollment_id = request.form.get("enrollment_id", "").strip()
                 try:
-                    conn.execute("""
-                        INSERT INTO grade(enrollment_id, assessment_name, score, max_score, recorded_at)
-                        VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)
-                        ON CONFLICT(enrollment_id, assessment_name)
-                        DO UPDATE SET score=excluded.score, max_score=excluded.max_score,
-                                      recorded_at=CURRENT_TIMESTAMP
-                    """, (request.form["enrollment_id"], request.form["assessment_name"],
-                          request.form["score"], request.form["max_score"]))
+                    if not enrollment_id:
+                        raise ValueError("Choose a student enrollment.")
+                    saved = []
+                    for assessment in ("Midterm", "Final"):
+                        raw_score = request.form.get(assessment.lower(), "").strip()
+                        if raw_score == "":
+                            continue
+                        score = float(raw_score)
+                        if not 0 <= score <= 100:
+                            raise ValueError(f"{assessment} score must be between 0 and 100.")
+                        conn.execute("""
+                            INSERT INTO grade(enrollment_id,assessment_name,score,max_score,recorded_at)
+                            VALUES (?,?,?,100,CURRENT_TIMESTAMP)
+                            ON CONFLICT(enrollment_id,assessment_name)
+                            DO UPDATE SET score=excluded.score,max_score=100,recorded_at=CURRENT_TIMESTAMP
+                        """, (enrollment_id, assessment, score))
+                        saved.append(assessment)
+                    if not saved:
+                        raise ValueError("Enter at least one of the Midterm or Final scores.")
                     conn.commit()
-                    flash("Grade saved.", "success")
+                    flash("Saved: " + " and ".join(saved) + ".", "success")
                 except (sqlite3.IntegrityError, ValueError) as exc:
                     conn.rollback()
-                    flash(f"Grade could not be saved: {exc}", "error")
+                    flash(f"Grades could not be saved: {exc}", "error")
                 return redirect(url_for("grades"))
             eligible = conn.execute("""
                 SELECT e.enrollment_id, st.student_number,
@@ -152,17 +198,23 @@ def create_app(test_config=None):
                 WHERE e.status='ENROLLED' ORDER BY e.enrollment_id
             """).fetchall()
             rows = conn.execute("""
-                SELECT g.grade_id, g.assessment_name, g.score, g.max_score,
-                       e.enrollment_id, st.student_number,
-                       p.first_name || ' ' || p.last_name AS student_name, c.course_code
-                FROM grade g JOIN enrollment e ON e.enrollment_id=g.enrollment_id
-                JOIN student st ON st.student_id=e.student_id
+                SELECT e.enrollment_id, st.student_number,
+                       p.first_name || ' ' || p.last_name AS student_name,
+                       c.course_code, s.section_number,
+                       MAX(CASE WHEN g.assessment_name='Midterm' THEN g.score END) AS midterm,
+                       MAX(CASE WHEN g.assessment_name='Final' THEN g.score END) AS final
+                FROM enrollment e JOIN student st ON st.student_id=e.student_id
                 JOIN person p ON p.person_id=st.person_id
                 JOIN section s ON s.section_id=e.section_id
                 JOIN course c ON c.course_id=s.course_id
-                ORDER BY g.grade_id DESC
+                LEFT JOIN grade g ON g.enrollment_id=e.enrollment_id
+                GROUP BY e.enrollment_id
+                ORDER BY st.student_number,c.course_code
             """).fetchall()
-        return render_template("grades.html", eligible=eligible, grades=rows)
+        return render_template(
+            "grades.html", eligible=eligible, grades=rows,
+            midterm_weight=app.config["MIDTERM_WEIGHT"], final_weight=app.config["FINAL_WEIGHT"]
+        )
 
     @app.errorhandler(404)
     def not_found(_error):
@@ -180,4 +232,5 @@ if __name__ == "__main__":
             conn.execute("PRAGMA foreign_keys=ON")
             conn.executescript((BASE_DIR / "database" / "schema.sql").read_text())
             conn.executescript((BASE_DIR / "database" / "sample_data.sql").read_text())
+            conn.executescript((BASE_DIR / "database" / "expanded_sample_data.sql").read_text())
     app.run(host="127.0.0.1", port=int(os.environ.get("PORT", "5000")), debug=False)

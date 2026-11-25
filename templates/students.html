@@ -1,1 +1,21 @@
-{% extends "base.html" %}{% block content %}<h2>Students</h2><form method="get"><input name="q" value="{{ q }}" placeholder="Search name, number or email"><button>Search</button></form><table><tr><th>Number</th><th>Name</th><th>Email</th><th>Department</th><th>Program</th><th>Level</th><th>Status</th></tr>{% for s in students %}<tr><td>{{ s.student_number }}</td><td>{{ s.first_name }} {{ s.last_name }}</td><td>{{ s.email }}</td><td>{{ s.department_name }}</td><td>{{ s.program }}</td><td>{{ s.level }}</td><td>{{ s.status }}</td></tr>{% endfor %}</table>{% endblock %}
+{% extends "base.html" %}{% block content %}
+<h2>Students</h2>
+<section class="panel">
+<h3>Add a new student</h3>
+<form method="post" class="form-grid">
+<label>First name<input name="first_name" maxlength="80" required></label>
+<label>Last name<input name="last_name" maxlength="80" required></label>
+<label>Email<input type="email" name="email" required></label>
+<label>Student number<input name="student_number" required></label>
+<label>Department<select name="department_id" required>{% for d in departments %}<option value="{{ d.department_id }}">{{ d.department_name }}</option>{% endfor %}</select></label>
+<label>Program<input name="program" placeholder="BSc Computer Science" required></label>
+<label>Level<select name="level" required>{% for n in range(1,9) %}<option value="{{ n }}">{{ n }}</option>{% endfor %}</select></label>
+<label>Admission date<input type="date" name="admission_date" required></label>
+<div><button type="submit">Add student</button></div>
+</form>
+</section>
+<form method="get" class="search-form"><input name="q" value="{{ q }}" placeholder="Search name, number or email"><button>Search</button></form>
+<p><strong>{{ students|length }}</strong> student record(s) shown.</p>
+<table><tr><th>Number</th><th>Name</th><th>Email</th><th>Department</th><th>Program</th><th>Level</th><th>Status</th></tr>
+{% for s in students %}<tr><td>{{ s.student_number }}</td><td>{{ s.first_name }} {{ s.last_name }}</td><td>{{ s.email }}</td><td>{{ s.department_name }}</td><td>{{ s.program }}</td><td>{{ s.level }}</td><td>{{ s.status }}</td></tr>{% else %}<tr><td colspan="7">No students found.</td></tr>{% endfor %}</table>
+{% endblock %}
